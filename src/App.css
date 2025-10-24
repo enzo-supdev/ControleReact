@@ -86,6 +86,223 @@
   font-size: 1.8rem;
 }
 
+/* ==================== NOUVEAUTÉS NIVEAU 2 ==================== */
+
+/* Conteneur des contrôles (recherche + tri) */
+.controls-container {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Barre de recherche */
+.search-box {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.75rem 3rem 0.75rem 1rem;
+  font-size: 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.search-input:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.clear-search {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #e74c3c;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  color: white;
+  transition: all 0.2s;
+  z-index: 10;
+}
+
+.clear-search:hover {
+  background: #c0392b;
+  transform: translateY(-50%) scale(1.1);
+}
+
+/* Boutons de tri */
+.sort-buttons {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.sort-button {
+  flex: 1;
+  min-width: 150px;
+  padding: 0.75rem 1.5rem;
+  background: white;
+  color: #333;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.sort-button:hover {
+  border-color: #667eea;
+  background: #f8f9ff;
+}
+
+.sort-button.active {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+.sort-icon {
+  font-weight: bold;
+}
+
+/* Info sur les résultats */
+.results-info {
+  color: white;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+  font-weight: 500;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+
+.pagination-button {
+  padding: 0.75rem 1.5rem;
+  background: white;
+  color: #667eea;
+  border: 2px solid #667eea;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.pagination-button:hover:not(:disabled) {
+  background: #667eea;
+  color: white;
+  transform: translateY(-2px);
+}
+
+.pagination-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: #ccc;
+  color: #999;
+}
+
+.pagination-numbers {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.pagination-number {
+  width: 40px;
+  height: 40px;
+  background: white;
+  color: #667eea;
+  border: 2px solid #667eea;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pagination-number:hover {
+  background: #f8f9ff;
+  transform: translateY(-2px);
+}
+
+.pagination-number.active {
+  background: #667eea;
+  color: white;
+}
+
+.pagination-ellipsis {
+  color: white;
+  font-size: 1.2rem;
+  font-weight: bold;
+  padding: 0 0.5rem;
+}
+
+/* Message "aucun résultat" */
+.no-results {
+  text-align: center;
+  padding: 3rem;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.no-results p {
+  font-size: 1.2rem;
+  color: #666;
+  margin-bottom: 1.5rem;
+}
+
+.clear-search-button {
+  padding: 0.75rem 1.5rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.clear-search-button:hover {
+  background: #5568d3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+/* ==================== FIN NOUVEAUTÉS NIVEAU 2 ==================== */
+
 .user-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -302,5 +519,49 @@
 
   .app-header h1 {
     font-size: 1.5rem;
+  }
+
+  /* Responsive pour les nouvelles fonctionnalités */
+  .controls-container {
+    padding: 1rem;
+  }
+
+  .sort-buttons {
+    flex-direction: column;
+  }
+
+  .sort-button {
+    width: 100%;
+  }
+
+  .pagination {
+    gap: 0.25rem;
+  }
+
+  .pagination-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .pagination-number {
+    width: 35px;
+    height: 35px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .search-input {
+    font-size: 0.9rem;
+  }
+
+  .pagination-numbers {
+    gap: 0.25rem;
+  }
+
+  .pagination-number {
+    width: 32px;
+    height: 32px;
+    font-size: 0.85rem;
   }
 }
