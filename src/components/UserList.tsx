@@ -1,6 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import UserCard from './UserCard'
+import SkeletonLoader from './SkeletonLoader'
+import ErrorMessage from './ErrorMessage'
+import { useFavorites } from '../hooks/useFavorites'
 
 interface User {
   id: number
@@ -17,8 +20,7 @@ interface User {
   }
 }
 
-type SortField = 'name' | 'age'
-type SortOrder = 'asc' | 'desc'
+type SortOption = 'name-asc' | 'name-desc' | 'age-asc' | 'age-desc' | 'favorites'
 
 function UserList() {
   const [users, setUsers] = useState<User[]>([])
@@ -28,48 +30,50 @@ function UserList() {
   // États pour la recherche
   const [searchTerm, setSearchTerm] = useState('')
   
-  // États pour le tri
-  const [sortField, setSortField] = useState<SortField>('name')
-  const [sortOrder, setSortOrder] = useState<SortOrder>('asc')
+  // État pour le tri via menu déroulant
+  const [sortOption, setSortOption] = useState<SortOption>('name-asc')
   
   // États pour la pagination
   const [currentPage, setCurrentPage] = useState(1)
   const USERS_PER_PAGE = 10
 
-  // Récupération des utilisateurs avec gestion d'erreurs
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-        
-        const response = await fetch('https://dummyjson.com/users')
-        
-        if (!response.ok) {
-          throw new Error(`Erreur HTTP: ${response.status}`)
-        }
-        
-        const data = await response.json()
-        
-        if (!data.users || !Array.isArray(data.users)) {
-          throw new Error('Format de données invalide')
-        }
-        
-        setUsers(data.users)
-      } catch (err) {
-        console.error('Erreur lors du chargement:', err)
-        if (err instanceof TypeError) {
-          setError('Erreur de connexion. Vérifiez votre connexion internet.')
-        } else if (err instanceof Error) {
-          setError(err.message)
-        } else {
-          setError('Une erreur inconnue est survenue')
-        }
-      } finally {
-        setLoading(false)
-      }
-    }
+  // Hook personnalisé pour les favoris
+  const { favorites, toggleFavorite, isFavorite } = useFavorites()
 
+  // Récupération des utilisateurs avec gestion d'erreurs
+  const fetchUsers = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const response = await fetch('https://dummyjson.com/users')
+      
+      if (!response.ok) {
+        throw new Error(`Erreur HTTP: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      
+      if (!data.users || !Array.isArray(data.users)) {
+        throw new Error('Format de données invalide')
+      }
+      
+      setUsers(data.users)
+    } catch (err) {
+      console.error('Erreur lors du chargement:', err)
+      if (err instanceof TypeError) {
+        setError('Erreur de connexion. Vérifiez votre connexion internet.')
+      } else if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError('Une erreur inconnue est survenue')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
     fetchUsers()
   }, [])
 
@@ -86,19 +90,39 @@ function UserList() {
         )
       })
 
-      // 2. Tri
+      // 2. Tri dynamique selon l'option sélectionnée
       filtered.sort((a, b) => {
-        let comparison = 0
-        
-        if (sortField === 'name') {
-          const nameA = `${a.firstName} ${a.lastName}`.toLowerCase()
-          const nameB = `${b.firstName} ${b.lastName}`.toLowerCase()
-          comparison = nameA.localeCompare(nameB)
-        } else if (sortField === 'age') {
-          comparison = a.age - b.age
+        switch (sortOption) {
+          case 'name-asc':
+            const nameA = `${a.firstName} ${a.lastName}`.toLowerCase()
+            const nameB = `${b.firstName} ${b.lastName}`.toLowerCase()
+            return nameA.localeCompare(nameB)
+          
+          case 'name-desc':
+            const nameDescA = `${a.firstName} ${a.lastName}`.toLowerCase()
+            const nameDescB = `${b.firstName} ${b.lastName}`.toLowerCase()
+            return nameDescB.localeCompare(nameDescA)
+          
+          case 'age-asc':
+            return a.age - b.age
+          
+          case 'age-desc':
+            return b.age - a.age
+          
+          case 'favorites':
+            // Les favoris en premier
+            const aIsFav = isFavorite(a.id)
+            const bIsFav = isFavorite(b.id)
+            if (aIsFav && !bIsFav) return -1
+            if (!aIsFav && bIsFav) return 1
+            // Sinon tri par nom
+            const favNameA = `${a.firstName} ${a.lastName}`.toLowerCase()
+            const favNameB = `${b.firstName} ${b.lastName}`.toLowerCase()
+            return favNameA.localeCompare(favNameB)
+          
+          default:
+            return 0
         }
-        
-        return sortOrder === 'asc' ? comparison : -comparison
       })
 
       return filtered
@@ -106,7 +130,7 @@ function UserList() {
       console.error('Erreur lors du traitement des utilisateurs:', err)
       return []
     }
-  }, [users, searchTerm, sortField, sortOrder])
+  }, [users, searchTerm, sortOption, favorites, isFavorite])
 
   // 3. Pagination
   const totalPages = Math.ceil(processedUsers.length / USERS_PER_PAGE)
@@ -119,23 +143,7 @@ function UserList() {
   // Réinitialiser la page lors de la recherche ou du tri
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchTerm, sortField, sortOrder])
-
-  // Gestion du changement de tri
-  const handleSortChange = (field: SortField) => {
-    try {
-      if (sortField === field) {
-        // Inverser l'ordre si on clique sur le même champ
-        setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
-      } else {
-        // Nouveau champ, ordre ascendant par défaut
-        setSortField(field)
-        setSortOrder('asc')
-      }
-    } catch (err) {
-      console.error('Erreur lors du changement de tri:', err)
-    }
-  }
+  }, [searchTerm, sortOption])
 
   // Gestion de la pagination
   const handlePageChange = (page: number) => {
@@ -155,12 +163,10 @@ function UserList() {
     const maxPagesToShow = 5
 
     if (totalPages <= maxPagesToShow) {
-      // Afficher toutes les pages si peu nombreuses
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i)
       }
     } else {
-      // Logique pour afficher ... entre les pages
       pages.push(1)
       
       if (currentPage > 3) {
@@ -181,29 +187,27 @@ function UserList() {
     return pages
   }
 
+  // Affichage du chargement avec skeleton
   if (loading) {
     return (
-      <div className="loading-container">
-        <div className="spinner"></div>
-        <p>Chargement des utilisateurs...</p>
+      <div className="user-list-container">
+        <h2>Liste des utilisateurs</h2>
+        <SkeletonLoader />
       </div>
     )
   }
 
+  // Affichage de l'erreur avec composant stylisé
   if (error) {
     return (
-      <div className="error-container">
-        <h2>❌ Erreur</h2>
-        <p>{error}</p>
-        <button onClick={() => window.location.reload()}>
-          Réessayer
-        </button>
+      <div className="user-list-container">
+        <ErrorMessage message={error} onRetry={fetchUsers} />
       </div>
     )
   }
 
   return (
-    <div className="user-list-container">
+    <div className="user-list-container fade-in">
       <h2>Liste des utilisateurs</h2>
 
       {/* Barre de recherche et contrôles */}
@@ -228,31 +232,31 @@ function UserList() {
           )}
         </div>
 
-        {/* Boutons de tri */}
-        <div className="sort-buttons">
-          <button
-            className={`sort-button ${sortField === 'name' ? 'active' : ''}`}
-            onClick={() => handleSortChange('name')}
+        {/* Menu déroulant pour le tri */}
+        <div className="sort-dropdown-container">
+          <label htmlFor="sort-select" className="sort-label">
+            Trier par :
+          </label>
+          <select
+            id="sort-select"
+            className="sort-dropdown"
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value as SortOption)}
           >
-            Trier par nom
-            {sortField === 'name' && (
-              <span className="sort-icon">
-                {sortOrder === 'asc' ? ' ↑' : ' ↓'}
-              </span>
-            )}
-          </button>
-          <button
-            className={`sort-button ${sortField === 'age' ? 'active' : ''}`}
-            onClick={() => handleSortChange('age')}
-          >
-            Trier par âge
-            {sortField === 'age' && (
-              <span className="sort-icon">
-                {sortOrder === 'asc' ? ' ↑' : ' ↓'}
-              </span>
-            )}
-          </button>
+            <option value="name-asc">Nom (A → Z)</option>
+            <option value="name-desc">Nom (Z → A)</option>
+            <option value="age-asc">Âge (croissant)</option>
+            <option value="age-desc">Âge (décroissant)</option>
+            <option value="favorites">Favoris en premier ⭐</option>
+          </select>
         </div>
+
+        {/* Compteur de favoris */}
+        {favorites.length > 0 && (
+          <div className="favorites-counter">
+            ⭐ {favorites.length} favori{favorites.length > 1 ? 's' : ''}
+          </div>
+        )}
       </div>
 
       {/* Compteur de résultats */}
@@ -267,7 +271,11 @@ function UserList() {
           <div className="user-grid">
             {paginatedUsers.map((user) => (
               <Link key={user.id} to={`/user/${user.id}`} className="user-link">
-                <UserCard user={user} />
+                <UserCard 
+                  user={user} 
+                  isFavorite={isFavorite(user.id)}
+                  onToggleFavorite={toggleFavorite}
+                />
               </Link>
             ))}
           </div>
